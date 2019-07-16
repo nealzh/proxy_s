@@ -45,8 +45,6 @@ class ProxySpeedTester(object):
             self.logger.info('at ProxySpeedTester.run before while True.')
             print('at ProxySpeedTester.run before while True.')
 
-            test_thread_dict = dict()
-
             while True:
 
                 input_queue_size = self.input_queue.qsize()
@@ -72,6 +70,8 @@ class ProxySpeedTester(object):
                     for i in range(input_queue_size if input_queue_size < free_test_thread_num else free_test_thread_num):
 
                         source, proxy = self.input_queue.get_nowait()
+
+                        # print(source, proxy)
 
                         if proxy is not None:
                             thread_name = '_'.join(proxy)

@@ -189,31 +189,31 @@ class ProxyPresisenter(object):
         try:
             while True:
 
-                print('at ProxyPresisenter.run after while True.')
+                # print('at ProxyPresisenter.run after while True.')
 
                 current_active_time = time.time()
                 if current_active_time - active_last_time > self.active_update_seconds:
-                    print('in ProxyPresisenter.run after if current_active_time - active_last_time.', current_active_time - active_last_time, self.active_update_seconds)
+                    # print('in ProxyPresisenter.run after if current_active_time - active_last_time.', current_active_time - active_last_time, self.active_update_seconds)
                     active_last_time = current_active_time
                     self.send_active_proxy()
                     self.del_inactive_proxy()
-                print('after ProxyPresisenter.run after if current_active_time - active_last_time.', current_active_time - active_last_time, self.active_update_seconds)
+                # print('after ProxyPresisenter.run after if current_active_time - active_last_time.', current_active_time - active_last_time, self.active_update_seconds)
                 current_inactive_time = time.time()
                 if current_inactive_time - inactive_last_time > self.inactive_update_seconds:
-                    print('in ProxyPresisenter.run after if current_inactive_time - inactive_last_time.', current_inactive_time - inactive_last_time, self.inactive_update_seconds)
+                    # print('in ProxyPresisenter.run after if current_inactive_time - inactive_last_time.', current_inactive_time - inactive_last_time, self.inactive_update_seconds)
                     inactive_last_time = current_inactive_time
                     self.send_inactive_proxy()
 
-                print('after ProxyPresisenter.run after if current_inactive_time - inactive_last_time.', current_inactive_time - inactive_last_time, self.inactive_update_seconds)
+                # print('after ProxyPresisenter.run after if current_inactive_time - inactive_last_time.', current_inactive_time - inactive_last_time, self.inactive_update_seconds)
                 spider_active, presis_active, presis_inactive = self.handle_queue()
 
-                print('at ProxyPresisenter.run after self.handle_queue().')
+                # print('at ProxyPresisenter.run after self.handle_queue().')
                 if len(presis_active) > 0 or len(presis_inactive) > 0:
                     self.handle_presisent_proxy(presis_active, presis_inactive)
-                print('at ProxyPresisenter.run after self.handle_presisent_proxy().')
+                # print('at ProxyPresisenter.run after self.handle_presisent_proxy().')
                 if len(spider_active) > 0:
                     self.handle_spider_proxy(spider_active)
-                print('at ProxyPresisenter.run after self.handle_spider_proxy().')
+                # print('at ProxyPresisenter.run after self.handle_spider_proxy().')
 
                 time.sleep(self.sleep_interval)
         except Exception as e:
@@ -223,19 +223,23 @@ class ProxyPresisenter(object):
         self.storage.delete(self.table_name,
                             condition=' where is_active = 0 and now() - update_time > ' + str(self.inactive_del_seconds))
 
+    def select_active_proxy(self, min_speed=50):
+        condition = ' where is_active = 1 and speed > %s ' % min_speed
+        return self.storage.select(self.table_name, self.select_column_str, condition=condition)
+
     def send_active_proxy(self):
         column_names, active_list = self.storage.select(self.table_name, self.select_column_str, condition=' where is_active = 1 ')
         print('at ProxyPresisenter.send_active_proxy', column_names, active_list)
 
         for active_proxy in active_list:
-            print('at ProxyPresisenter.send_active_proxy', active_proxy)
+            # print('at ProxyPresisenter.send_active_proxy', active_proxy)
             self.output_queue.put(('persisent', active_proxy))
 
     def send_inactive_proxy(self):
         column_names, inactive_list = self.storage.select(self.table_name, self.select_column_str, condition=' where is_active = 0 ')
         print('at ProxyPresisenter.send_inactive_proxy', column_names, inactive_list)
         for inactive_proxy in inactive_list:
-            print('at ProxyPresisenter.send_inactive_proxy', inactive_list)
+            # print('at ProxyPresisenter.send_inactive_proxy', inactive_list)
             self.output_queue.put(('persisent', inactive_proxy))
 
     def handle_presisent_proxy(self, active_list, inactive_list):
@@ -265,12 +269,12 @@ class ProxyPresisenter(object):
 
         for ip, port, p_type, resp_time, speed in proxy_list:
 
-            print('at ProxyPresisenter.handle_spider_proxy', ip, port, p_type, resp_time, speed)
+            # print('at ProxyPresisenter.handle_spider_proxy', ip, port, p_type, resp_time, speed)
 
             insert_or_update_values = ', '.join([str(ip_2_int(ip)), adq(p_type), port, adq(ip), str(resp_time), str(speed), '1'])
-            print('at ProxyPresisenter.handle_spider_proxy:insert_or_update_values', insert_or_update_values)
+            # print('at ProxyPresisenter.handle_spider_proxy:insert_or_update_values', insert_or_update_values)
             duplicate_update_str = self.insert_duplicate_update_str % (str(resp_time), str(speed), adq(get_datetime_str()))
-            print('at ProxyPresisenter.handle_spider_proxy:duplicate_update_str', duplicate_update_str)
+            # print('at ProxyPresisenter.handle_spider_proxy:duplicate_update_str', duplicate_update_str)
 
             insert_or_update_list.append((self.table_name,
                                           self.insert_columns_str,
